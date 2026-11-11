@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSIT 111 - Web Dev</title>
+</head>
+<body>
+<div id="portfolio-container">
+<!-- Header Section -->
+<h1>Vince Gerano</h1>
+<p style="text-align: center">
+<span class="highlight">IT Student</span> | Web Developer Aspirant
+</p>
+<!-- Profile Image -->
+<img
+src="https://lh3.googleusercontent.com/a/ACg8ocK03VuzcOzt5xvl4yQLRgUk6emmQZP5O8A1K-qBOxbS7LE_oUM=s288-c-no"
+alt="Profile Picture"
+class="profile-img"
+/>
+<hr />
+<!-- About Section with Formatting -->
+<h2>About Me</h2>
+<p>
+Hello! I am learning <b>HTML</b> and <i>CSS</i> to build exciting web
+projects. I am <strong>passionate</strong> about
+<em>computer science and IT</em>.
+</p>
+<hr />
+<!-- Skills Section with Lists -->
+<h2>Technical Skills</h2>
+<h3>Languages (Unordered List)</h3>
+<ul>
+<li>HTML5</li>
+<li>CSS3</li>
+<li>Git & GitHub</li>
+<li>C++</li>
+</ul>
+<h3>Learning Roadmap (Ordered List)</h3>
+<ol>
+<li>HTML/CSS Crash Course</li>
+<li>Publish to GitHub Pages</li>
+<li>C++ Fundamentals</li>
+</ol>
+<hr />
+<!-- Projects Section with Hyperlinks -->
+<h2>My Projects</h2>
+<div class="project-card">
+<h3>Project 1: Spotify</h3>
+<p>A simple responsive portfolio website built with Google Site.</p>
+<p>
+Link: <a href="https://sites.google.com/usa.edu.ph/spotibince/home" target="_blank">View Demo</a>
+</p>
+</div>
+<div class="project-card">
+<h3>Project 2: Netflix</h3>
+<p>A simple responsive portfolio website built with Google Site.</p>
+<p>
+Link:
+<a href="https://sites.google.com/usa.edu.ph/vgnetflix/home" target="_blank">View Demo</a>
+</p>
+</div>
+<hr />
+<!-- Tables Section (Headers, Data, Colspan & Rowspan) -->
+<h2>Course Schedule & Grades</h2>
+<table>
+<thead>
+<tr>
+<th>Subject</th>
+<th>Topic</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="3">CSIT 101</td>
+<td>Version Control & Git</td>
+<td>Completed</td>
+</tr>
+<tr>
+<td>HTML5 Tags & Structure</td>
+<td>In Progress</td>
+</tr>
+<tr>
+<td>CSS Box Model & Styling</td>
+<td>In Progress</td>
+</tr>
+<tr>
+<td colspan="2">Overall Workshop Progress</td>
+<td><strong>80%</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+</body>
+</html>
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f8;
+  color: #333;
+  margin: 0;
+  padding: 20px;
+}
+#portfolio-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 30px;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+}
+h1,
+h2,
+h3 {
+  color: #2c3e50;
+  text-align: center;
+}
+p {
+  line-height: 1.6;
+}
+hr {
+  border: none;
+  height: 1px;
+  background-color: #ccc;
+  margin: 20px 0;
+}
+.profile-img {
+  display: block;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 3px solid #3498db;
+}
+.highlight {
+  background-color: #fff3cd;
+  padding: 2px 5px;
+}
+.project-card {
+  border: 1px solid #e0e0e0;
+  padding: 15px;
+  margin: 15px 0;
+  background-color: #fafafa;
+}
+a {
+  color: #3498db;
+  text-decoration: none;
+  font-weight: bold;
+}
+a:hover {
+  color: #1d6fa5;
+  text-decoration: underline;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+}
+th {
+  background-color: #2c3e50;
+  color: white;
+}
+/* Table row lights up on hover pseudo-selector */
+tr:hover {
+  background-color: #e8f4fc;
+}

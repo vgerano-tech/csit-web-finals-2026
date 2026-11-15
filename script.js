@@ -4,19 +4,20 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let W, H, S, F, DT = 0, on = !reduce, t = 0, last = 0, mx = 0, my = 0, tx = 0, ty = 0, sy = scrollY;
   let explore = false, zoom = 1, tz = 1, pan = { x: 0, y: 0 }, wp = { x: 0, y: 0 }, fx = 0, fy = 0, spin = 0, pp = 0, ea = 0;
-  let fly = null, hover = -1, focus = 0, comet = null;
+  let fly = null, hover = -1, focus = 0, follow = null, comet = null;
   const rnd = Math.random, lerp = (a, b, k) => a + (b - a) * k, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const MOB = innerWidth < 700;
   const wrap = (v, f) => ((v + f / 2) % f + f) % f - f / 2;
 
   // The six planets. Planet 01 is the wireframe home planet; 02 to 06 are the other sections.
   // Positions and sizes are multiples of the screen size S so the map fits any device.
   const PL = [
-    { id: 'about', n: '01', name: 'Intro', ux: 0, uy: 0, r: .3 },
-    { id: 'education', n: '02', name: 'Academics', ux: -1.35, uy: -.3, r: .17, c: ['#9fe8ff', '#2f7cf0', '#0b1450'], bands: ['#ffffff', '#bff3ff'] },
-    { id: 'achievements', n: '03', name: 'Achievements', ux: 1.3, uy: -.45, r: .15, c: ['#fff0b0', '#e6a93a', '#4a2a05'], bands: ['#7a4a10'], ring: 1 },
-    { id: 'skills', n: '04', name: 'Skills', ux: -1, uy: .6, r: .19, c: ['#e4d4ff', '#8a6bff', '#1d1050'], bands: ['#4b2fb0', '#c9b8ff', '#4b2fb0'], ring: 1 },
-    { id: 'projects', n: '05', name: 'Projects', ux: 1.05, uy: .55, r: .16, c: ['#ffc9a8', '#e0603a', '#3a0f08'], craters: 1 },
-    { id: 'values', n: '06', name: 'Values', ux: .1, uy: -.85, r: .14, c: ['#d6fff8', '#3fd1c0', '#06303a'], bands: ['#ffffff'], moon: 1 }
+    { id: 'about', n: '01', name: 'Intro', ux: 0, uy: 0, r: .4 },
+    { id: 'education', n: '02', name: 'Academics', ux: 0, uy: 0, r: .15, c: ['#9fe8ff', '#2f7cf0', '#0b1450'], bands: ['#ffffff', '#bff3ff'] },
+    { id: 'achievements', n: '03', name: 'Achievements', ux: 0, uy: 0, r: .13, c: ['#fff0b0', '#e6a93a', '#4a2a05'], bands: ['#7a4a10'], ring: 1 },
+    { id: 'skills', n: '04', name: 'Skills', ux: 0, uy: 0, r: .17, c: ['#e4d4ff', '#8a6bff', '#1d1050'], bands: ['#4b2fb0', '#c9b8ff', '#4b2fb0'], ring: 1 },
+    { id: 'projects', n: '05', name: 'Projects', ux: 0, uy: 0, r: .14, c: ['#ffc9a8', '#e0603a', '#3a0f08'], craters: 1 },
+    { id: 'values', n: '06', name: 'Values', ux: 0, uy: 0, r: .12, c: ['#d6fff8', '#3fd1c0', '#06303a'], bands: ['#ffffff'], moon: 1 }
   ];
   const TEASE = { about: 'Who I am', education: 'School and coursework', achievements: 'Honors and certificates', skills: 'HTML5, CSS3, C++, Luau, Git', projects: 'Portfolio, Space Explorer, Roblox game', values: 'How I work' };
   PL.forEach(p => { p.t = TEASE[p.id]; });
@@ -84,6 +85,7 @@
       const col = mixc(c1, c2, m); return [col[0], col[1], col[2], k * f * f * 190];
     });
   }
+  const GAL = [{ ox: .3, oy: -.32, r: 70, a: .5, c: '200,180,255' }, { ox: -.34, oy: .3, r: 90, a: -.4, c: '255,205,160' }, { ox: .4, oy: .34, r: 50, a: .2, c: '160,210,255' }];
   const NC = [[[120, 70, 255], [255, 90, 170]], [[0, 150, 255], [90, 255, 220]], [[255, 80, 160], [255, 170, 90]]];
   const KIND = { about: ['earth', 7, 'rgba(120,200,255,.6)', 1], education: ['earth', 11, 'rgba(120,200,255,.55)', 1], achievements: ['gold', 22, 'rgba(255,210,140,.5)'],
     skills: ['gas', 33, 'rgba(190,170,255,.5)'], projects: ['rust', 44, 'rgba(255,170,130,.45)'], values: ['ice', 55, 'rgba(160,255,240,.5)'] };
@@ -98,15 +100,18 @@
     ctx.restore();
   }
 
-  const wx = p => p.ux * S, wy = p => p.id === 'about' ? -.04 * H : p.uy * S, wr = p => p.r * S;
+  const ORB = [null, { rad: 1.15, a0: -2.6, sp: .012 }, { rad: 1.45, a0: -.7, sp: .009 }, { rad: 1.3, a0: 2.4, sp: -.01 }, { rad: 1.5, a0: .75, sp: .008 }, { rad: 1.05, a0: -1.57, sp: .014 }];
+  PL.forEach((p, i) => { p.o = ORB[i]; p.h = 0; });
+  const ang = p => p.o.a0 + t * p.o.sp;
+  const wx = p => p.o ? p.o.rad * S * Math.cos(ang(p)) : 0, wy = p => -.04 * H + (p.o ? p.o.rad * S * .62 * Math.sin(ang(p)) : 0), wr = p => p.r * S;
   const X = x => W / 2 + (x - pan.x) * zoom, Y = y => H / 2 + (y - pan.y) * zoom;
   const ready = p => wr(p) * zoom >= .28 * S;
 
   const SPEC = ['#9bb0ff', '#cad8ff', '#ffffff', '#fff4e0', '#ffd9a0', '#ffb98a'];
   const mk = (x, y, z, big) => ({ x, y, z, s: .002 + rnd() * .006, p: rnd() * 6.28, c: SPEC[(Math.pow(rnd(), 1.4) * SPEC.length) | 0], big });
-  const stars = Array.from({ length: 700 }, () => mk(rnd(), rnd(), .1 + rnd() * .9, rnd() < .025));
-  for (let i = 0; i < 700; i++) { const gx = rnd() - .5, gy = (rnd() + rnd() + rnd() - 1.5) * .12, a = -.45; stars.push(mk(((.5 + gx * Math.cos(a) - gy * Math.sin(a)) % 1 + 1) % 1, ((.5 + gx * Math.sin(a) + gy * Math.cos(a)) % 1 + 1) % 1, .06 + rnd() * .2, false)); }
-  const rocks = Array.from({ length: 70 }, () => {
+  const stars = Array.from({ length: MOB ? 420 : 700 }, () => mk(rnd(), rnd(), .1 + rnd() * .9, rnd() < .025));
+  for (let i = 0; i < (MOB ? 350 : 700); i++) { const gx = rnd() - .5, gy = (rnd() + rnd() + rnd() - 1.5) * .12, a = -.45; stars.push(mk(((.5 + gx * Math.cos(a) - gy * Math.sin(a)) % 1 + 1) % 1, ((.5 + gx * Math.sin(a) + gy * Math.cos(a)) % 1 + 1) % 1, .06 + rnd() * .2, false)); }
+  const rocks = Array.from({ length: MOB ? 40 : 70 }, () => {
     const n = 7 + (rnd() * 3 | 0);
     const poly = Array.from({ length: n }, (_, i) => { const a = i / n * 6.2832, r = .7 + rnd() * .5; return [Math.cos(a) * r, Math.sin(a) * r]; });
     return { x: rnd(), y: rnd(), z: .3 + rnd() * .65, r: 5 + rnd() * 16, a: rnd() * 6.28, w: (rnd() - .5) * .8, vx: (rnd() - .5) * .004, poly };
@@ -114,12 +119,12 @@
   const nebs = [[-700, -400, 900, '122,60,255'], [900, 300, 1000, '0,170,255'], [-300, 900, 900, '255,80,160']].map(([x, y, r, c], i) => ({ x, y, r, c, tex: makeNeb(NC[i][0], NC[i][1], 100 + i * 7) }));
   // UFOs and aliens fly around the planets (click one to say hi)
   const ents = [
-    { k: 'ufo', cx: 0, cy: -.04, rx: .62, ry: .22, sp: .25, ph: 0, s: .035 },
-    { k: 'ufo', cx: -1, cy: .6, rx: .42, ry: .15, sp: -.35, ph: 2, s: .03 },
-    { k: 'ufo', cx: 1.05, cy: .55, rx: .35, ry: .13, sp: .4, ph: 4, s: .028 },
-    { k: 'alien', cx: 1.3, cy: -.45, rx: .27, ry: .1, sp: .3, ph: 1, s: .03 },
-    { k: 'alien', cx: -1.35, cy: -.3, rx: .27, ry: .12, sp: -.25, ph: 3, s: .03 },
-    { k: 'alien', cx: .1, cy: -.85, rx: .23, ry: .09, sp: .35, ph: 5, s: .026 }
+    { k: 'ufo', pl: 0, rx: .95, ry: .3, sp: .25, ph: 0, s: .035 },
+    { k: 'ufo', pl: 3, rx: .4, ry: .14, sp: -.35, ph: 2, s: .03 },
+    { k: 'ufo', pl: 4, rx: .25, ry: .1, sp: .4, ph: 4, s: .028 },
+    { k: 'alien', pl: 2, rx: .22, ry: .09, sp: .3, ph: 1, s: .03 },
+    { k: 'alien', pl: 1, rx: .22, ry: .1, sp: -.25, ph: 3, s: .03 },
+    { k: 'alien', pl: 5, rx: .2, ry: .08, sp: .35, ph: 5, s: .026 }
   ].map(e => ({ ...e, say: 0, msg: '' }));
   const lines = ['Greetings, human!', 'Take me to your leader.', 'Nice portfolio!', 'Beep boop.', 'Is this Earth?', 'Hire this student!'];
 
@@ -178,25 +183,36 @@
     ctx.beginPath(); ctx.arc(m[0], m[1], Math.max(3, R * .035), 0, 7); ctx.fill(); ctx.shadowBlur = 0;
   }
 
+  const rr = (x, y, w, h, r) => (ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h));
   function label(x, y, p, hot) {
-    const txt = `${p.n} ${p.name}` + (p.seen ? ' ✓' : '') + (hot ? (ready(p) ? ' - click to open' : ' - click to zoom in') : '');
-    const sub = hot && p.t ? p.t : '';
-    ctx.font = '12px "Space Mono", monospace'; ctx.textAlign = 'center';
-    const w = Math.max(ctx.measureText(txt).width, sub ? ctx.measureText(sub).width : 0) + 16;
-    ctx.fillStyle = 'rgba(4,5,14,.82)'; ctx.fillRect(x - w / 2, y - 13, w, sub ? 40 : 21);
-    ctx.fillStyle = hot ? '#5ee7ff' : p.seen ? '#ffbf7a' : '#eaf1ff'; ctx.fillText(txt, x, y + 2);
-    if (sub) { ctx.fillStyle = '#aab6dd'; ctx.fillText(sub, x, y + 20); }
+    const txt = `${p.n}  ${p.name}`.toUpperCase(), act = hot ? (ready(p) ? 'OPEN' : 'ZOOM') : '', sub = hot && p.t ? p.t : '';
+    const f1 = '600 11px "Space Mono", monospace', f2 = '10px "Space Mono", monospace';
+    ctx.textAlign = 'left'; ctx.font = f1; ctx.letterSpacing = '1.5px';
+    const w1 = ctx.measureText(txt).width + (act ? ctx.measureText(act).width + 16 : 0) + 34;
+    ctx.font = f2; ctx.letterSpacing = '.8px';
+    const w = Math.max(w1, sub ? ctx.measureText(sub).width + 24 : 0), h = sub ? 46 : 26, bx = x - w / 2, by = y - 12;
+    ctx.save(); ctx.beginPath(); rr(bx, by, w, h, 8);
+    const g = ctx.createLinearGradient(0, by, 0, by + h); g.addColorStop(0, 'rgba(130,205,255,.18)'); g.addColorStop(1, 'rgba(8,12,34,.66)');
+    ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = hot ? 'rgba(94,231,255,.9)' : 'rgba(94,231,255,.28)'; ctx.lineWidth = 1;
+    if (hot) { ctx.shadowColor = '#5ee7ff'; ctx.shadowBlur = 12; }
+    ctx.stroke(); ctx.restore();
+    const dot = p.seen ? '#ffbf7a' : '#5ee7ff';
+    ctx.fillStyle = dot; ctx.shadowColor = dot; ctx.shadowBlur = 8; ctx.beginPath(); ctx.arc(bx + 12, by + 13, 2.6, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.font = f1; ctx.letterSpacing = '1.5px'; ctx.fillStyle = hot ? '#5ee7ff' : '#eaf1ff'; ctx.fillText(txt, bx + 23, by + 17);
+    if (act) { ctx.textAlign = 'right'; ctx.fillStyle = '#ffbf7a'; ctx.fillText(act, bx + w - 10, by + 17); ctx.textAlign = 'left'; }
+    if (sub) { ctx.font = f2; ctx.letterSpacing = '.8px'; ctx.fillStyle = '#aab6dd'; ctx.fillText(sub, bx + 12, by + 35); }
+    ctx.letterSpacing = '0px'; ctx.textAlign = 'center';
   }
 
   // Shaded section planets with bands, craters, rings, or a moon
   function sphere(p, i) {
-    const x = X(wx(p)), y = Y(wy(p)), r = wr(p) * zoom;
+    const x = X(wx(p)), y = Y(wy(p)), r = wr(p) * zoom * (1 + .06 * p.h);
     if (x < -r * 3 || x > W + r * 3 || y < -r * 3 || y > H + r * 3) return;
     const hot = hover === i;
     ctx.save(); ctx.globalAlpha = ea;
     const gl = ctx.createRadialGradient(x, y, r * .8, x, y, r * 1.7);
     gl.addColorStop(0, p.c[1] + '66'); gl.addColorStop(1, p.c[1] + '00');
-    ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, y, r * 1.7, 0, 7); ctx.fill();
+    ctx.globalAlpha = ea * (.7 + .6 * p.h); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(x, y, r * 1.8, 0, 7); ctx.fill(); ctx.globalAlpha = ea;
     const ring = (a0, a1) => {
       ctx.strokeStyle = p.c[0];
       [[1.55, .07, .55], [1.75, .12, .85], [2, .05, .5]].forEach(([k, w, o]) => { ctx.globalAlpha = ea * o; ctx.lineWidth = Math.max(1, r * w); ctx.beginPath(); ctx.ellipse(x, y, r * k, r * k * .27, -.35, a0, a1); ctx.stroke(); });
@@ -206,14 +222,14 @@
     drawWorld(p.w, x, y, r, t * .012 * (1 + i * .25)); ctx.globalAlpha = ea;
     if (p.ring) ring(0, Math.PI);
     if (p.moon) { const a = t * .8; ctx.fillStyle = '#e9eefc'; ctx.beginPath(); ctx.arc(x + Math.cos(a) * r * 1.8, y + Math.sin(a) * r * .5, r * .16, 0, 7); ctx.fill(); }
-    if (hot) { ctx.strokeStyle = '#5ee7ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r * 1.12, 0, 7); ctx.stroke(); }
+    if (hot) { ctx.strokeStyle = '#5ee7ff'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x, y, r * 1.14, 0, 7); ctx.stroke(); }
     label(x, y + r * (p.ring ? 1.45 : 1.25) + 14, p, hot);
     ctx.restore();
   }
 
   function rock(q) {
     const d = q.z, zf = 1 + (zoom - 1) * d;
-    const x = W / 2 + wrap(q.x * F - pan.x * d - mx * 70 * d, F) * zf, y = H / 2 + wrap(q.y * F - pan.y * d - sy * .2 * d, F) * zf;
+    const x = W / 2 + wrap(q.x * F - pan.x * d - mx * 90 * d, F) * zf, y = H / 2 + wrap(q.y * F - pan.y * d - sy * .2 * d, F) * zf;
     const r = q.r * zf * (.5 + d * .6), a = q.a + t * q.w;
     if (x < -r * 2 || x > W + r * 2 || y < -r * 2 || y > H + r * 2) return;
     ctx.beginPath();
@@ -235,7 +251,7 @@
 
   function ent(e, i) {
     const a = t * e.sp + e.ph;
-    const x = X(e.cx * S + Math.cos(a) * e.rx * S), y = Y(e.cy * S + Math.sin(a) * e.ry * S), s = e.s * S * zoom;
+    const P = PL[e.pl], x = X(wx(P) + Math.cos(a) * e.rx * S), y = Y(wy(P) + Math.sin(a) * e.ry * S), s = e.s * S * zoom;
     e.sx = x; e.sy = y; e.sr = s * 1.4;
     const al = i === 0 ? Math.max(ea, .6 * (1 - pp)) : ea;
     if (al < .02 || x < -s * 3 || x > W + s * 3 || y < -s * 3 || y > H + s * 3) return;
@@ -299,15 +315,18 @@
     F = 3 * Math.max(W, H);
     const LIM = 1.8 * S, cx = W / 2, cy = H / 2;
     ea = lerp(ea, explore ? 1 : 0, .08);
+    PL.forEach((p, i) => { p.h = lerp(p.h, hover === i ? 1 : 0, .18); });
 
     if (explore) {
       if (fly) {
-        pan.x = lerp(pan.x, fly.x, .07); pan.y = lerp(pan.y, fly.y, .07); zoom = lerp(zoom, tz, .07);
-        if (Math.abs(pan.x - fly.x) + Math.abs(pan.y - fly.y) < 1 && Math.abs(zoom - tz) < .01) { fly = null; wp = { x: pan.x, y: pan.y }; fx = cx; fy = cy; }
+        if (focus) { fly.x = wx(PL[focus]); fly.y = wy(PL[focus]); }
+        const k = reduce ? 1 : .06;
+        pan.x = lerp(pan.x, fly.x, k); pan.y = lerp(pan.y, fly.y, k); zoom = lerp(zoom, tz, k);
+        if (Math.abs(pan.x - fly.x) + Math.abs(pan.y - fly.y) < 1 && Math.abs(zoom - tz) < .01) { fly = null; wp = { x: pan.x, y: pan.y }; fx = cx; fy = cy; follow = focus || null; }
       } else if (Math.abs(tz - zoom) > .0005) {
         zoom += (tz - zoom) * .14;
         pan.x = clamp(wp.x - (fx - cx) / zoom, -LIM, LIM); pan.y = clamp(wp.y - (fy - cy) / zoom, -LIM, LIM);
-      }
+      } else if (follow) { pan.x = lerp(pan.x, wx(PL[follow]), .08); pan.y = lerp(pan.y, wy(PL[follow]), .08); }
     } else { zoom += (tz - zoom) * .14; pan.x *= .9; pan.y *= .9; }
     pp = lerp(pp, explore ? 0 : clamp(sy / (H * .9), 0, 1), .1);
 
@@ -320,6 +339,12 @@
     for (const n of nebs) {
       const d = .15, zf = 1 + (zoom - 1) * d, x = cx + wrap(n.x - pan.x * d, F) * zf, y = cy + wrap(n.y - pan.y * d, F) * zf, r = n.r * zf * 1.5;
       ctx.globalAlpha = explore ? .55 : .35; ctx.drawImage(n.tex, x - r, y - r, r * 2, r * 2);
+    }
+    for (const g of GAL) {
+      ctx.save(); ctx.translate(cx + g.ox * W - pan.x * .08, cy + g.oy * H - pan.y * .08); ctx.rotate(g.a); ctx.scale(1, .36);
+      const gg = ctx.createRadialGradient(0, 0, 0, 0, 0, g.r);
+      gg.addColorStop(0, `rgba(${g.c},.85)`); gg.addColorStop(.15, `rgba(${g.c},.35)`); gg.addColorStop(1, `rgba(${g.c},0)`);
+      ctx.globalAlpha = .6; ctx.fillStyle = gg; ctx.fillRect(-g.r, -g.r, g.r * 2, g.r * 2); ctx.restore();
     }
     // A distant sun in the top-left: every planet is lit from that direction
     const sx0 = W * .05 - pan.x * .3, sy0 = H * .05 - pan.y * .3, sg = ctx.createRadialGradient(sx0, sy0, 0, sx0, sy0, S * .6);
@@ -343,13 +368,13 @@
 
     if (ea > .02) {
       ctx.save(); ctx.globalAlpha = ea * .55; ctx.strokeStyle = '#5ee7ff'; ctx.lineWidth = 1; ctx.setLineDash([6, 10]); ctx.lineDashOffset = -t * 18;
-      PL.forEach((p, i) => { if (!i) return; ctx.beginPath(); ctx.moveTo(X(0), Y(wy(PL[0]))); ctx.lineTo(X(wx(p)), Y(wy(p))); ctx.stroke(); });
+      PL.forEach((p, i) => { if (!i) return; ctx.globalAlpha = ea * (hover === i ? .9 : .35); ctx.beginPath(); ctx.ellipse(X(0), Y(-.04 * H), p.o.rad * S * zoom, p.o.rad * S * .62 * zoom, 0, 0, 6.2832); ctx.stroke(); });
       ctx.restore();
       PL.forEach((p, i) => { if (i) sphere(p, i); });
     }
 
     // Home planet: large in the middle, drifts aside as you scroll the page
-    const R = lerp(.3 * S, .15 * S, pp) * zoom, bx = lerp(0, W * .3, pp), by = lerp(H * .46, H * .34, pp) - cy;
+    const R = lerp(.4 * S, .18 * S, pp) * zoom * (1 + .03 * PL[0].h), bx = lerp(0, W * .3, pp), by = lerp(H * .46, H * .34, pp) - cy;
     const px = cx + (bx - pan.x) * zoom - mx * 30, py = cy + (by - pan.y) * zoom - my * 20;
     ctx.globalAlpha = lerp(.6, 1, ea) * (1 - pp * .45); drawWorld(PL[0].w, px, py, R, t * .01 + sy * .0003 + spin * .05); ctx.globalAlpha = 1;
     planet(px, py, R, t * .22 + sy * .0015 + mx * 1.1 + spin, .4 + my * .5, lerp(1, .4, pp) * .5);
@@ -381,17 +406,18 @@
   const overview = () => clamp(Math.min(W / (2 * 1.55 * S), H / (2 * 1.2 * S)), .2, .7);
 
   function zoomAt(f, px, py) {
-    fly = null;
+    fly = null; follow = null;
     wp = { x: pan.x + (px - W / 2) / zoom, y: pan.y + (py - H / 2) / zoom };
     fx = px; fy = py; tz = clamp(tz * f, .2, 8);
   }
-  function flyTo(i) { focus = i; fly = { x: wx(PL[i]), y: wy(PL[i]) }; tz = i ? 3.2 : 1.4; }
-  function home() { focus = 0; fly = { x: 0, y: 0 }; tz = overview(); }
+  function flyTo(i) { focus = i; follow = null; mark(); fly = { x: wx(PL[i]), y: wy(PL[i]) }; tz = i ? 3.2 : 1.4; }
+  function home() { focus = 0; follow = null; mark(); fly = { x: 0, y: 0 }; tz = overview(); }
 
   function openSheet(id) {
     const src = document.getElementById(id), p = PL.find(q => q.id === id);
     p.seen = true; btns[PL.indexOf(p)].classList.add('seen');
-    const n = PL.filter(q => q.seen).length; prog.textContent = n === PL.length ? 'All 6 visited, nice!' : n + '/6 visited';
+    sheet.style.setProperty('--pc', (p.c && p.c[1]) || '#5ee7ff');
+    const n = PL.filter(q => q.seen).length; prog.textContent = n === PL.length ? '6/6 complete' : n + '/6'; prog.style.setProperty('--p', n / PL.length);
     const nodes = [];
     if (id === 'about') { nodes.push(src.querySelector('.portrait').cloneNode(true), src.querySelector('.intro').cloneNode(true)); }
     else nodes.push(src.cloneNode(true));
@@ -428,7 +454,7 @@
   xb.onclick = () => setExplore(!explore);
 
   // On-screen controls: zoom buttons and one button per planet
-  const btns = [], prog = document.createElement('span'); prog.className = 'xprog'; prog.textContent = '0/6 visited';
+  const btns = [], prog = document.createElement('span'); prog.className = 'xprog'; prog.textContent = '0/6'; prog.style.setProperty('--p', 0);
   const xn = document.createElement('div'); xn.className = 'xnav';
   PL.forEach((p, i) => {
     const b = document.createElement('button');
@@ -437,6 +463,7 @@
     btns.push(b); xn.append(b);
   });
   hud.append(xn, prog);
+  const mark = () => btns.forEach((b, k) => b.classList.toggle('on', k === focus)); mark();
   document.getElementById('zin').onclick = () => zoomAt(1.5, W / 2, H / 2);
   document.getElementById('zout').onclick = () => zoomAt(1 / 1.5, W / 2, H / 2);
   document.getElementById('zreset').onclick = home;
@@ -486,7 +513,7 @@
     const o = ptrs.get(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]);
     if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) down = null;
     if (ptrs.size === 1 && !down) {
-      fly = null;
+      fly = null; follow = null;
       const LIM = 1.8 * S;
       pan.x = clamp(pan.x - (e.clientX - o[0]) / zoom, -LIM, LIM); pan.y = clamp(pan.y - (e.clientY - o[1]) / zoom, -LIM, LIM);
       spin += (e.clientX - o[0]) * .004;

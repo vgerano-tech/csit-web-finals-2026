@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪐</text></svg>">
 <title>Vince Gerano – IT Student Portfolio</title>
 <meta name="description" content="Personal web portfolio of Vince Gerano, an IT student and aspiring web developer.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Cormorant+Garamond:wght@600;700&family=Space+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <script src="script.js" defer></script>
 </head>
@@ -15,7 +16,7 @@
 <a class="skip" href="#about">Skip to content</a>
 <canvas id="space" aria-hidden="true"></canvas>
 <div class="xhud" id="xhud" hidden>
-  <p>Drag to fly, scroll or pinch to zoom, click a planet to visit it, Esc to exit</p>
+  <p>Drag to fly, scroll to zoom, click a planet</p>
   <div><button type="button" id="zin" aria-label="Zoom in">+</button> <button type="button" id="zout" aria-label="Zoom out">−</button> <button type="button" id="zreset">Reset</button></div>
 </div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" hidden>
@@ -47,9 +48,9 @@
   <section id="about" aria-labelledby="about-title">
     <figure class="portrait">
       <div class="frame">
-        <span aria-hidden="true">vg</span>
+        <span aria-hidden="true">VG</span>
         <!-- Add your photo to the repository as profile.jpg -->
-        <img src="https://lh3.googleusercontent.com/a/ACg8ocK03VuzcOzt5xvl4yQLRgUk6emmQZP5O8A1K-qBOxbS7LE_oUM=s288-c-no" alt="Portrait of Vince Gerano" onerror="this.remove()">
+        <img src="profile.jpg" alt="Portrait of Vince Gerano" onerror="this.remove()">
       </div>
       <figcaption>Subject: V. Gerano // IT student</figcaption>
     </figure>
@@ -72,11 +73,11 @@
     <ol class="tl">
       <li>
         <h3>College: <span class="fill">[Bachelor of Science in Information Technology]</span></h3>
-        <p><span class="fill">[USA]</span>, expected graduation <span class="fill">[1st year]</span></p>
+        <p><span class="fill">[University name]</span>, expected graduation <span class="fill">[year]</span></p>
       </li>
       <li>
-        <h3>Senior high school: <span class="fill">[STEM]</span></h3>
-        <p><span class="fill">[USA]</span>, <span class="fill">[Since Junior High School]</span></p>
+        <h3>Senior high school: <span class="fill">[Track or strand]</span></h3>
+        <p><span class="fill">[School name]</span>, <span class="fill">[years attended]</span></p>
       </li>
     </ol>
     <h3 class="sub">Relevant coursework</h3>

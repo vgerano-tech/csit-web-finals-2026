@@ -1,4 +1,5 @@
 (() => {
+  document.documentElement.classList.add('js');
   const cv = document.getElementById('space'), ctx = cv.getContext('2d');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let W, H, S, F, DT = 0, on = !reduce, t = 0, last = 0, mx = 0, my = 0, tx = 0, ty = 0, sy = scrollY;
@@ -11,12 +12,14 @@
   // Positions and sizes are multiples of the screen size S so the map fits any device.
   const PL = [
     { id: 'about', n: '01', name: 'Intro', ux: 0, uy: 0, r: .3 },
-    { id: 'education', n: '02', name: 'Academics', ux: -1.05, uy: -.35, r: .13, c: ['#9fe8ff', '#2f7cf0', '#0b1450'], bands: ['#ffffff', '#bff3ff'] },
-    { id: 'achievements', n: '03', name: 'Achievements', ux: .95, uy: -.55, r: .11, c: ['#fff0b0', '#e6a93a', '#4a2a05'], bands: ['#7a4a10'], ring: 1 },
-    { id: 'skills', n: '04', name: 'Skills', ux: -.9, uy: .75, r: .15, c: ['#e4d4ff', '#8a6bff', '#1d1050'], bands: ['#4b2fb0', '#c9b8ff', '#4b2fb0'], ring: 1 },
-    { id: 'projects', n: '05', name: 'Projects', ux: .85, uy: .7, r: .12, c: ['#ffc9a8', '#e0603a', '#3a0f08'], craters: 1 },
-    { id: 'values', n: '06', name: 'Values', ux: .05, uy: -1.15, r: .1, c: ['#d6fff8', '#3fd1c0', '#06303a'], bands: ['#ffffff'], moon: 1 }
+    { id: 'education', n: '02', name: 'Academics', ux: -1.35, uy: -.3, r: .17, c: ['#9fe8ff', '#2f7cf0', '#0b1450'], bands: ['#ffffff', '#bff3ff'] },
+    { id: 'achievements', n: '03', name: 'Achievements', ux: 1.3, uy: -.45, r: .15, c: ['#fff0b0', '#e6a93a', '#4a2a05'], bands: ['#7a4a10'], ring: 1 },
+    { id: 'skills', n: '04', name: 'Skills', ux: -1, uy: .6, r: .19, c: ['#e4d4ff', '#8a6bff', '#1d1050'], bands: ['#4b2fb0', '#c9b8ff', '#4b2fb0'], ring: 1 },
+    { id: 'projects', n: '05', name: 'Projects', ux: 1.05, uy: .55, r: .16, c: ['#ffc9a8', '#e0603a', '#3a0f08'], craters: 1 },
+    { id: 'values', n: '06', name: 'Values', ux: .1, uy: -.85, r: .14, c: ['#d6fff8', '#3fd1c0', '#06303a'], bands: ['#ffffff'], moon: 1 }
   ];
+  const TEASE = { about: 'Who I am', education: 'School and coursework', achievements: 'Honors and certificates', skills: 'HTML5, CSS3, C++, Luau, Git', projects: 'Portfolio, Space Explorer, Roblox game', values: 'How I work' };
+  PL.forEach(p => { p.t = TEASE[p.id]; });
   const wx = p => p.ux * S, wy = p => p.id === 'about' ? -.04 * H : p.uy * S, wr = p => p.r * S;
   const X = x => W / 2 + (x - pan.x) * zoom, Y = y => H / 2 + (y - pan.y) * zoom;
   const ready = p => wr(p) * zoom >= .28 * S;
@@ -31,11 +34,11 @@
   // UFOs and aliens fly around the planets (click one to say hi)
   const ents = [
     { k: 'ufo', cx: 0, cy: -.04, rx: .62, ry: .22, sp: .25, ph: 0, s: .035 },
-    { k: 'ufo', cx: -.9, cy: .75, rx: .3, ry: .12, sp: -.35, ph: 2, s: .03 },
-    { k: 'ufo', cx: .85, cy: .7, rx: .28, ry: .1, sp: .4, ph: 4, s: .028 },
-    { k: 'alien', cx: .95, cy: -.55, rx: .22, ry: .1, sp: .3, ph: 1, s: .03 },
-    { k: 'alien', cx: -1.05, cy: -.35, rx: .2, ry: .12, sp: -.25, ph: 3, s: .03 },
-    { k: 'alien', cx: .05, cy: -1.15, rx: .18, ry: .08, sp: .35, ph: 5, s: .026 }
+    { k: 'ufo', cx: -1, cy: .6, rx: .42, ry: .15, sp: -.35, ph: 2, s: .03 },
+    { k: 'ufo', cx: 1.05, cy: .55, rx: .35, ry: .13, sp: .4, ph: 4, s: .028 },
+    { k: 'alien', cx: 1.3, cy: -.45, rx: .27, ry: .1, sp: .3, ph: 1, s: .03 },
+    { k: 'alien', cx: -1.35, cy: -.3, rx: .27, ry: .12, sp: -.25, ph: 3, s: .03 },
+    { k: 'alien', cx: .1, cy: -.85, rx: .23, ry: .09, sp: .35, ph: 5, s: .026 }
   ].map(e => ({ ...e, say: 0, msg: '' }));
   const lines = ['Greetings, human!', 'Take me to your leader.', 'Nice portfolio!', 'Beep boop.', 'Is this Earth?', 'Hire this student!'];
 
@@ -95,11 +98,13 @@
   }
 
   function label(x, y, p, hot) {
-    const txt = `${p.n} ${p.name}` + (hot ? (ready(p) ? ' - click to open' : ' - click to zoom in') : '');
+    const txt = `${p.n} ${p.name}` + (p.seen ? ' ✓' : '') + (hot ? (ready(p) ? ' - click to open' : ' - click to zoom in') : '');
+    const sub = hot && p.t ? p.t : '';
     ctx.font = '12px "Space Mono", monospace'; ctx.textAlign = 'center';
-    const w = ctx.measureText(txt).width + 14;
-    ctx.fillStyle = 'rgba(4,5,14,.78)'; ctx.fillRect(x - w / 2, y - 13, w, 21);
-    ctx.fillStyle = hot ? '#5ee7ff' : '#eaf1ff'; ctx.fillText(txt, x, y + 2);
+    const w = Math.max(ctx.measureText(txt).width, sub ? ctx.measureText(sub).width : 0) + 16;
+    ctx.fillStyle = 'rgba(4,5,14,.82)'; ctx.fillRect(x - w / 2, y - 13, w, sub ? 40 : 21);
+    ctx.fillStyle = hot ? '#5ee7ff' : p.seen ? '#ffbf7a' : '#eaf1ff'; ctx.fillText(txt, x, y + 2);
+    if (sub) { ctx.fillStyle = '#aab6dd'; ctx.fillText(sub, x, y + 20); }
   }
 
   // Shaded section planets with bands, craters, rings, or a moon
@@ -219,6 +224,7 @@
     DT = Math.min((ms - last) / 1000, .05); last = ms;
     if (on) t += DT;
     mx = lerp(mx, tx, .06); my = lerp(my, ty, .06);
+    document.documentElement.style.setProperty('--mx', mx.toFixed(3)); document.documentElement.style.setProperty('--my', my.toFixed(3));
     F = 3 * Math.max(W, H);
     const LIM = 1.8 * S, cx = W / 2, cy = H / 2;
     ea = lerp(ea, explore ? 1 : 0, .08);
@@ -255,7 +261,12 @@
     for (const q of rocks) { if (on) q.x = (q.x + q.vx * DT + 1) % 1; rock(q); }
     ctx.globalAlpha = 1;
 
-    if (ea > .02) PL.forEach((p, i) => { if (i) sphere(p, i); });
+    if (ea > .02) {
+      ctx.save(); ctx.globalAlpha = ea * .55; ctx.strokeStyle = '#5ee7ff'; ctx.lineWidth = 1; ctx.setLineDash([6, 10]); ctx.lineDashOffset = -t * 18;
+      PL.forEach((p, i) => { if (!i) return; ctx.beginPath(); ctx.moveTo(X(0), Y(wy(PL[0]))); ctx.lineTo(X(wx(p)), Y(wy(p))); ctx.stroke(); });
+      ctx.restore();
+      PL.forEach((p, i) => { if (i) sphere(p, i); });
+    }
 
     // Home planet: large in the middle, drifts aside as you scroll the page
     const R = lerp(.3 * S, .15 * S, pp) * zoom, bx = lerp(0, W * .3, pp), by = lerp(H * .46, H * .34, pp) - cy;
@@ -286,7 +297,7 @@
   const sheet = document.getElementById('sheet'), sbody = document.getElementById('sbody'), sclose = document.getElementById('sclose');
   const shell = document.querySelectorAll('main, footer, nav'), header = document.querySelector('header');
   let prevFocus = null;
-  const overview = () => clamp(Math.min(W / (2 * 1.6 * S), H / (2 * 1.45 * S)), .2, .6);
+  const overview = () => clamp(Math.min(W / (2 * 1.55 * S), H / (2 * 1.2 * S)), .2, .7);
 
   function zoomAt(f, px, py) {
     fly = null;
@@ -298,6 +309,8 @@
 
   function openSheet(id) {
     const src = document.getElementById(id), p = PL.find(q => q.id === id);
+    p.seen = true; btns[PL.indexOf(p)].classList.add('seen');
+    const n = PL.filter(q => q.seen).length; prog.textContent = n === PL.length ? 'All 6 visited, nice!' : n + '/6 visited';
     const nodes = [];
     if (id === 'about') { nodes.push(src.querySelector('.portrait').cloneNode(true), src.querySelector('.intro').cloneNode(true)); }
     else nodes.push(src.cloneNode(true));
@@ -334,14 +347,15 @@
   xb.onclick = () => setExplore(!explore);
 
   // On-screen controls: zoom buttons and one button per planet
+  const btns = [], prog = document.createElement('span'); prog.className = 'xprog'; prog.textContent = '0/6 visited';
   const xn = document.createElement('div'); xn.className = 'xnav';
   PL.forEach((p, i) => {
     const b = document.createElement('button');
     b.type = 'button'; b.textContent = p.n; b.title = p.name; b.setAttribute('aria-label', 'Fly to ' + p.name);
     b.onclick = () => { if (focus === i && !fly && ready(p)) openSheet(p.id); else flyTo(i); };
-    xn.append(b);
+    btns.push(b); xn.append(b);
   });
-  hud.append(xn);
+  hud.append(xn, prog);
   document.getElementById('zin').onclick = () => zoomAt(1.5, W / 2, H / 2);
   document.getElementById('zout').onclick = () => zoomAt(1 / 1.5, W / 2, H / 2);
   document.getElementById('zreset').onclick = home;
@@ -418,6 +432,9 @@
     el.textContent = ''; let i = 0;
     (function tick() { el.textContent = msg.slice(0, ++i); if (i < msg.length) setTimeout(tick, 110); })();
   }
+
+  const rv = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); rv.unobserve(e.target); } }), { threshold: .12 });
+  document.querySelectorAll('main > section.panel').forEach(s => rv.observe(s));
 
   const zones = { about: 'Home orbit', education: 'Flight school', achievements: 'Medal bay', skills: 'Toolkit', projects: 'Mission control', values: 'Flight code' };
   const ids = Object.keys(zones), zEl = document.getElementById('zone'), links = document.querySelectorAll('nav a');
